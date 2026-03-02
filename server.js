@@ -26,15 +26,20 @@ const JWT_SECRET = process.env.JWT_SECRET;
 // Register user
 app.post("/api/register", async (req, res) => {
   const { name, email, password } = req.body;
-  const password_hash = await bcrypt.hash(password, 10);
   try {
-    const result = await pool.query(
-      "INSERT INTO users (name,email,password_hash) VALUES ($1,$2,$3) RETURNING id,email",
-      [name, email, password_hash]
+    // Your code to insert user into database
+    const result = await db.query(
+      "INSERT INTO users (name, email, password) VALUES ($1, $2, $3) RETURNING id, email",
+      [name, email, password]
     );
     res.json({ success: true, user: result.rows[0] });
   } catch (err) {
-    res.status(400).json({ error: "Email already exists" });
+    console.error(err); // <-- logs the real error
+    if (err.code === "23505") { // Postgres unique constraint error
+      res.status(400).json({ error: "Email already exists" });
+    } else {
+      res.status(500).json({ error: "Internal Server Error" });
+    }
   }
 });
 
@@ -51,5 +56,6 @@ app.post("/api/login", async (req, res) => {
   const token = jwt.sign({ id: user.id }, JWT_SECRET, { expiresIn: "7d" });
   res.json({ success: true, token });
 });
+
 
 app.listen(3000, () => console.log("Backend running on port 3000"));
