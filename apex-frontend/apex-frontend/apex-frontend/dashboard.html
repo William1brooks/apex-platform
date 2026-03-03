@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Apex Platform Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0c0f1a, #1a1f2a);
+  color:white;
+}
+header {
+  padding:20px;
+  text-align:center;
+  background:#111827;
+  font-size:30px;
+  font-weight:bold;
+  box-shadow:0 4px 6px rgba(0,0,0,0.4);
+}
+.container {
+  max-width: 1200px;
+  margin:20px auto;
+  padding:0 20px;
+}
+.cards {
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+}
+.card {
+  background:#1f2937;
+  padding:25px;
+  border-radius:15px;
+  flex:1 1 300px;
+  box-shadow:0 0 25px rgba(0,0,0,0.5);
+  transition: transform 0.3s;
+}
+.card:hover { transform: scale(1.02);}
+.card h3 { margin-top:0; font-size:22px; }
+.table-wrapper { overflow-x:auto; margin-top:10px; }
+table { width:100%; border-collapse:collapse; }
+table, th, td { border:1px solid #374151; }
+th, td { padding:12px; text-align:left; white-space: nowrap; }
+th { background:#111827; }
+tr:nth-child(even) { background:#1f2937; }
+button {
+  padding:12px 18px;
+  background:#2563eb;
+  color:white;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  margin-top:10px;
+  transition:0.3s;
+}
+button:hover { background:#1e40af; transform: scale(1.05);}
+@media(max-width:900px){
+  .cards { flex-direction: column; }
+  header { font-size:24px; }
+  .card { padding:20px; }
+  th, td { padding:10px; }
+}
+</style>
+</head>
+<body>
+
+<header>Apex Platform Dashboard</header>
+
+<div class="container">
+  <div class="cards">
+    <!-- Accounts Table -->
+    <div class="card" id="accounts-card">
+      <h3>Accounts</h3>
+      <div class="table-wrapper" id="accounts"></div>
+    </div>
+    
+    <!-- Trades Table -->
+    <div class="card" id="trades-card">
+      <h3>Trades</h3>
+      <div class="table-wrapper" id="trades"></div>
+    </div>
+    
+    <!-- Transactions Table -->
+    <div class="card" id="transactions-card">
+      <h3>Transactions</h3>
+      <div class="table-wrapper" id="transactions"></div>
+    </div>
+    
+    <!-- Accounts Chart -->
+    <div class="card">
+      <h3>Accounts by Type</h3>
+      <canvas id="accountsChart" width="400" height="200"></canvas>
+    </div>
+    
+    <!-- Trades Chart -->
+    <div class="card">
+      <h3>Trades Summary</h3>
+      <canvas id="tradesChart" width="400" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_URL = "https://apex-backend-a2hi.onrender.com";
+const token = localStorage.getItem("jwt_token");
+if(!token){
+  alert("Not logged in. Redirecting to login page.");
+  window.location.href = "auth.html";
+}
+
+// Fetch Accounts Table
+async function fetchAccounts(){
+  const res = await fetch(API_URL + "/api/accounts", { headers:{ "Authorization": "Bearer " + token } });
+  const data = await res.json();
+  const container = document.getElementById("accounts");
+  container.innerHTML = data.accounts?.length
+    ? data.accounts.map(a => `<p>ID: ${a.id} | Balance: ${a.balance} | Type: ${a.account_type}</p>`).join('')
+    : "<p>No accounts found.</p>";
+}
+
+// Fetch Trades Table
+async function fetchTrades(){
+  const res = await fetch(API_URL + "/api/trades", { headers:{ "Authorization": "Bearer " + token } });
+  const data = await res.json();
+  const container = document.getElementById("trades");
+  container.innerHTML = data.trades?.length
+    ? `<div class="table-wrapper"><table><tr><th>ID</th><th>Account ID</th><th>Type</th><th>Amount</th></tr>${data.trades.map(t => `<tr><td>${t.id}</td><td>${t.account_id}</td><td>${t.trade_type}</td><td>${t.amount}</td></tr>`).join('')}</table></div>`
+    : "<p>No trades found.</p>";
+}
+
+// Fetch Transactions Table
+async function fetchTransactions(){
+  const res = await fetch(API_URL + "/api/transactions", { headers:{ "Authorization": "Bearer " + token } });
+  const data = await res.json();
+  const container = document.getElementById("transactions");
+  container.innerHTML = data.transactions?.length
+    ? `<div class="table-wrapper"><table><tr><th>ID</th><th>Account ID</th><th>Type</th><th>Amount</th><th>Date</th></tr>${data.transactions.map(tx => `<tr><td>${tx.id}</td><td>${tx.account_id}</td><td>${tx.transaction_type}</td><td>${tx.amount}</td><td>${tx.created_at}</td></tr>`).join('')}</table></div>`
+    : "<p>No transactions found.</p>";
+}
+
+// Fetch Accounts Chart
+async function fetchAccountsChart(){
+  const res = await fetch(API_URL + "/api/accounts-summary", { headers:{ "Authorization": "Bearer " + token }});
+  const data = await res.json();
+  const ctx = document.getElementById("accountsChart").getContext("2d");
+  new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: data.summary.map(a => a.account_type),
+      datasets: [{
+        label: 'Total Balance',
+        data: data.summary.map(a => a.total_balance),
+        backgroundColor: ['#2563eb','#1d4ed8','#1e40af','#3b82f6']
+      }]
+    },
+    options: { responsive:true, plugins: { legend: { position: 'bottom' } } }
+  });
+}
+
+// Fetch Trades Chart
+async function fetchTradesChart(){
+  const res = await fetch(API_URL + "/api/trades-summary", { headers:{ "Authorization": "Bearer " + token }});
+  const data = await res.json();
+  const ctx = document.getElementById("tradesChart").getContext("2d");
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.summary.map(t => t.trade_type),
+      datasets: [{
+        label: 'Total Trades',
+        data: data.summary.map(t => t.total_trades),
+        backgroundColor: ['#2563eb','#1d4ed8','#1e40af','#3b82f6']
+      }]
+    },
+    options: { responsive:true, plugins: { legend: { display:false } } }
+  });
+}
+
+// Initialize all data
+fetchAccounts();
+fetchTrades();
+fetchTransactions();
+fetchAccountsChart();
+fetchTradesChart();
+</script>
+
+</body>
+</html>
