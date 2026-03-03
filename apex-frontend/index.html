@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Apex Platform</title>
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0c0f1a, #1a1f2a);
+  color:white;
+}
+.header {
+  text-align:center;
+  padding:100px 20px;
+}
+.header h1 {
+  font-size:50px;
+  margin-bottom:20px;
+}
+.header p {
+  font-size:22px;
+  margin-bottom:40px;
+}
+.header button {
+  padding:18px 40px;
+  margin:10px;
+  font-size:18px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  background:#2563eb;
+  color:white;
+  transition: 0.3s;
+}
+.header button:hover { background:#1e40af; transform: scale(1.05);}
+@media(max-width:600px){
+  .header h1 { font-size:36px; }
+  .header p { font-size:18px; }
+  .header button { width:80%; padding:15px; }
+}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>Apex Platform</h1>
+  <p>Secure & Modern Financial Trading</p>
+  <button onclick="window.location.href='auth.html?mode=register'">Register</button>
+  <button onclick="window.location.href='auth.html?mode=login'">Login</button>
+</div>
+</body>
+</html>
