@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Apex Platform - Register/Login</title>
+<style>
+body {
+  margin:0;
+  font-family: Arial, sans-serif;
+  background: linear-gradient(135deg, #0c0f1a, #1a1f2a);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+.box {
+  background: #111827;
+  padding: 50px 40px;
+  border-radius: 20px;
+  width: 400px;
+  box-shadow: 0 0 35px rgba(0,0,0,0.6);
+  text-align:center;
+  transition: transform 0.3s;
+}
+.box:hover { transform: scale(1.02);}
+h2 { margin-top: 0; font-size:28px; }
+input {
+  width: 100%;
+  padding: 15px;
+  margin: 12px 0;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+}
+button {
+  width: 100%;
+  padding: 15px;
+  background: #2563eb;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-bottom: 10px;
+  transition: 0.3s;
+}
+button:hover { background:#1e40af; transform: scale(1.03);}
+.toggle-btn {
+  background: transparent;
+  color: #2563eb;
+  font-weight: normal;
+  margin-top: 10px;
+}
+.toggle-btn:hover { color:#1e40af; }
+@media(max-width:500px){
+  .box { width:90%; padding:30px; }
+  input { padding:12px; }
+  button { padding:12px; }
+  h2 { font-size:24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="box">
+  <h2 id="form-title">Register</h2>
+  <input id="name" placeholder="Name">
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button id="submit-btn" onclick="submitForm()">Register</button>
+  <button class="toggle-btn" onclick="toggleForm()">Already have an account? Login</button>
+</div>
+
+<script>
+const API_URL = "https://apex-backend-a2hi.onrender.com";
+let isRegister = true;
+
+function toggleForm() {
+  isRegister = !isRegister;
+  document.getElementById("form-title").innerText = isRegister ? "Register" : "Login";
+  document.getElementById("submit-btn").innerText = isRegister ? "Register" : "Login";
+}
+
+async function submitForm() {
+  const name = document.getElementById("name").value;
+  const email = document.getElementById("email").value;
+  const password = document.getElementById("password").value;
+
+  if(isRegister){
+    const res = await fetch(API_URL + "/api/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password })
+    });
+    const data = await res.json();
+    alert(JSON.stringify(data));
+  } else {
+    const res = await fetch(API_URL + "/api/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password })
+    });
+    const data = await res.json();
+    if(data.token){
+      localStorage.setItem("jwt_token", data.token);
+      localStorage.setItem("user_id", data.user?.id || null);
+      window.location.href = "dashboard.html";
+    } else { alert(JSON.stringify(data)); }
+  }
+}
+</script>
+
+</body>
+</html>
