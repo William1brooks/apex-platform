@@ -11,7 +11,10 @@ dotenv.config();
 const app = express();
 app.use(cors());
 app.use(express.json());
-
+// Test endpoint
+app.get("/api/test", (req, res) => {
+  res.json({ message: "API is working" });
+});
 // ----------------- PostgreSQL Connection -----------------
 const pool = new pg.Pool({
   host: process.env.DB_HOST,
@@ -103,3 +106,4 @@ app.get("/api/transactions/:accountId", async (req, res) => {
 // ----------------- Start Server -----------------
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Backend running on port ${PORT}`));
+
